@@ -1,0 +1,321 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+
+</head>
+<body>
+<script>
+		var cv, cx, i;
+		var cooki; //사용자가 움직이는 쿠키 객체
+		var obRandomX ;//랜덤으로 표시되는 장애물 x 값
+		var timeW, timeX, timeSpeed;
+
+		var count = 0;//라운드 클리어 개수 
+		var obscount = 0;//장애물에 부딪힌 개수
+		var spaceBar = 0;//스페이스바에 따른 상태 변수
+
+		//배경 음악 변수
+		var gamebgm;
+		var gameover;
+		var gameclear;
+
+		var keyPressList = new Array();//키 배열
+		var obsValue = new Array();//장애물 x위치, 스피드 배열
+		var obstacle = new Array();// 장애물 이미지 배열
+		var obs = new Array();//장애물 객체 배열
+	
+		window.onload = init;
+
+		function init() {
+			cv = document.getElementById("canvas");
+			cx = cv.getContext("2d");
+
+			obsValue = [10, 5, 450, 7, 920, 7, 100, 20, 450, 5, 980, 5, 200, 15];//인덱스의 짝수는 장애물 x위치, 홀수는 스피드 값
+			
+			//생성할 쿠키 객체의 초기화와 처음 위치 지정
+			cooki = new Cooki(465, 10);
+			//타임바 넓이, x위치, 스피드 초기값
+			timeW = 200;
+			timeX = 210;
+			timeSpeed = 0.3;
+			//장애물 이미지 적재
+			var obstacleImg;
+			for (i = 0; i < 6; i++) {
+				obstacleImg = new Image();
+				obstacleImg.src = "images/장애물" + i + ".png";
+				obstacle.push(obstacleImg);
+			}
+			//오디오 설정 출처: https://m.blog.naver.com/scyan2011/221912823492
+			gamebgm = new sound("music/ost.mp3");
+			gameclear = new sound("music/game clear.mp3");
+			gameover = new sound("music/game over.mp3");
+
+			setInterval(gameLoop, 33);
+			setInterval(am, 2000);//장애물 랜덤 생성
+			setInterval(timeLine, 1000);
+
+
+		}
+
+		function gameLoop() {
+			cx.save();
+			gamebgm.play();
+			gameclear.stop();
+			gameover.stop();
+			cx.fillStyle="black";
+			cx.fillRect(0, 0, canvas.width, canvas.height);
+
+			gameNext();
+
+			// 장애물 x 방향으로 이동
+			for (i = 0; i < obsValue.length; i += 2) {
+				if (obsValue[0 + i] > canvas.width) {
+					obsValue[0 + i] = 0;
+				}
+				obsValue[0 + i] += obsValue[1 + i];
+			}
+			//첫 화면 설정
+			var img;
+			img = new Image();
+			if (spaceBar == 0) {
+				img.src = "images/시작.png";
+				cx.drawImage(img, 0, 0, canvas.width, canvas.height);
+			}
+			//스페이스바를 누르면 게임 화면 이동
+			if (spaceBar == 1) {
+				cx.drawImage(img, 0, 0, 0, 0);
+				cooki.reset(465, 10);
+				spaceBar = 2;
+			} else {
+				update();
+				render();
+				collision();
+				gameClear();
+			}
+			cx.restore();
+		}
+
+		//장애물 랜덤 위치 함수
+		function am() {
+			obRandomX = Math.random() * canvas.width;
+		}
+
+		//새로운 게임(리셋)
+		function gameClear() {
+			var img;
+			img = new Image();
+			if (count > 2) {//모든 라운드 클리어 시 탈출 성공 문자
+				
+				img.src = "images/game clear.png";
+				cx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+				gamebgm.stop();
+				gameclear.play();
+				gameover.stop();
+			}
+
+		}
+
+		//다음 라운드
+		function gameNext() {
+			var backgroundImg;
+			backgroundImg = new Image();
+
+			//쿠키가 화면 밖으로 이동하면 제자리로 리셋
+			if ((cooki.y + 70) > canvas.height) {
+				cooki.y = 10;
+				count++
+			}
+			//라운드 1일 때 장애물 속성
+			if (count == 0) {
+				cx.save();
+				cx.globalAlpha = 0.5;
+
+				backgroundImg.src = "images/R1.jpg";
+				cx.drawImage(backgroundImg, 0, 0, canvas.width, canvas.height);
+				cx.fillStyle="#FBEBD2";
+				cx.fillRect(0, 0, canvas.width, canvas.height);
+				cx.restore();
+
+				obs[0] = new Obstacle(obsValue[0], 200, 0);
+				obs[1] = new Obstacle(obsValue[2], 450, 1);
+				obs[2] = new Obstacle(obsValue[4], 450, 1);
+			}
+			//라운드 2일 때 장애물 속성
+			if (count == 1) {
+				cx.save();
+				cx.globalAlpha = 0.5;
+				backgroundImg.src = "images/R2.jpg";
+				cx.drawImage(backgroundImg, 0, 0, canvas.width, canvas.height);
+				cx.fillStyle="#808080";
+				cx.fillRect(0, 0, canvas.width, canvas.height);
+				cx.restore();
+				obs[3] = new Obstacle(obsValue[6], 200, 2);
+				obs[4] = new Obstacle(obRandomX, 500, 3);
+			}
+			//라운드 3일 때 장애물 속성
+			if (count == 2) {
+				cx.save();
+				cx.globalAlpha = 0.5;
+				backgroundImg.src = "images/R3.jpg";
+				cx.drawImage(backgroundImg, 0, 0, canvas.width, canvas.height);
+				cx.fillStyle="#4D377B";
+				cx.fillRect(0, 0, canvas.width, canvas.height);
+				cx.restore();
+				obs[5] = new Obstacle(obsValue[8], 150, 4);
+				obs[6] = new Obstacle(obsValue[10], 150, 4);
+				obs[7] = new Obstacle(obRandomX, 380, 4);
+				obs[8] = new Obstacle(obsValue[12], 550, 5);
+			}
+
+		}
+
+		//게임 오버
+		function gameOver() {
+			var img;
+			img = new Image();
+			img.src = "images/game over.png";
+			cx.drawImage(img, 0, 0, canvas.width, canvas.height);
+			gamebgm.stop();
+			gameclear.stop();
+			gameover.play();
+		}
+
+		//제한시간
+		function timeLine() {
+
+			//진행 라운드 안에 있고 부딪힌 장애물이 없을 때, 스페이스바를 누르면 타임바 생성
+			if (count <= 2 && obscount == 0 && spaceBar!=0) {
+				cx.fillStyle = "red";
+				cx.globalAlpha = 0.7;
+				cx.fillRect(20, 20, timeW, 30);
+				cx.globalAlpha = 1;
+				timeW -= timeSpeed;
+				//타임바가 모두 사라지면 게임 오버
+				if (timeW <= 0) {
+					timeW = 0;
+					gameOver();
+				}	
+			}
+
+			var timeImg;
+			timeImg = new Image();
+			timeImg.src = "images/시간제한.png";
+
+			//진행 라운드 안에 있고, 타임바의 넓이가 존재하며 부딪힌 장애물이 없을 때, 스페이스바를 누르면 타임바 이미지 생성
+			if (count <= 2 && timeW != 0 && obscount == 0 && spaceBar != 0) {
+				cx.drawImage(timeImg, timeX, 59);
+				timeX -= timeSpeed;
+				//타임바가 모두 사라지면 타임바 일러 위치 고정
+				if (timeX < 10) {
+					timeX = 10;
+				}
+			}
+
+		}
+		
+		//장애물 충돌 처리
+		function collision() {
+			for (i = 0; i < obs.length; i++) {
+			
+				if (obs[i].x < (cooki.x + 75) && (obs[i].x + 80) > cooki.x && obs[i].y < (cooki.y + 75) && (obs[i].y + 80) > cooki.y) {
+					if (spaceBar !=2) { obscount = 0; }
+					else { obscount++;}
+				}
+
+				if (obscount > 0 && spaceBar != 0) {
+					gameOver();
+				}
+			}
+
+		}
+
+		//왼쪽 방향키(키값: 37)와 오른쪽 방향키(키값: 39),아래 방향키(키값: 40)에 대한 움직임 설정
+		function update() {
+			if (keyPressList[40] == true) {
+				cooki.Move(0, 10);
+			}
+			if (keyPressList[39] == true) {
+				cooki.Move(10, 0);
+			}
+			if (keyPressList[37] == true) {
+				cooki.Move(-10, 0);
+			} if (keyPressList[32] == true) {
+				spaceBar = 1;
+			}
+			//키보드 'r'를 누르면 초기화
+			if (keyPressList[82] == true) {
+				count = 0;
+				timeW = 200;
+				timeX = 210;
+				obscount = 0;
+				cooki.reset(465, 10);
+			}
+
+		}
+
+		//키가 눌러지는 경우와 키 눌러짐이 해제되는 경우의 동작 처리
+		document.onkeydown = function (e) {
+			keyPressList[e.keyCode] = true;
+		}
+
+		document.onkeyup = function (e) {
+			keyPressList[e.keyCode] = false;
+		}
+		//이미지 처리
+		function render() {
+			cooki.Draw();
+			timeLine();
+		}
+		//배경 음악 처리 함수
+		function sound(src) {
+			this.sound = document.createElement("audio");
+			this.sound.src = src;
+			document.body.appendChild(this.sound);
+			this.play = function () {
+				this.sound.play();
+			}
+			this.stop = function () {
+				this.sound.pause();
+			}
+		}
+		//Cooki 객체의 속성 지정
+		function Cooki(_x, _y) {
+			this.x = _x;
+			this.y = _y;
+		}
+
+		//Cooki 객체 이미지 그리기
+		Cooki.prototype.Draw = function () {
+			var cookiImg;
+			cookiImg = new Image();
+			cookiImg.src = "images/쿠키.png";
+			cx.drawImage(cookiImg, this.x, this.y);
+		}
+
+		//Cooki 객체 움직임
+		Cooki.prototype.Move = function (speedX, speedY) {
+			this.x += speedX;
+			this.y += speedY
+		}
+		//Cooki 객체 위치 재위치
+		Cooki.prototype.reset = function (x,y) {
+			this.x = x;
+			this.y = y;
+		}
+
+		//장애물 객체 속성
+		function Obstacle(_x, _y, index) {
+			this.x = _x;
+			this.y = _y;
+						
+			cx.drawImage(obstacle[index], this.x, this.y);
+		}
+	</script>
+
+	<canvas id="canvas" width=1000 height=650 style="border: 1px solid red">
+		<p>canavs는 상위버전 브라우저에서 보입니다!!!</p>
+	</canvas>
+
+</body>
+</html>
