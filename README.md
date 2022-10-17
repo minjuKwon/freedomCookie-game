@@ -1,4 +1,4 @@
-# freedomCookie-game
+# Freedom Cookie game
 
 #### 주방에서 탈출해라 🍪💨💨💨
 
