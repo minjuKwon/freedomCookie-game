@@ -11,6 +11,6 @@
 - 배경 이미지 : [R1 IMAGE](https://kr.freepik.com/free-vector/kitchen-interior-concept_9399298.htm), [R2 IMAGE](https://www.freepik.com/free-vector/smart-fridge-two-chambered-refrigerator-front-view_8067126.htm), [R3 IMAGE](https://www.freepik.com/free-vector/road-night-city-empty-highway-glowing-skyline-with-futuristic-urban-architecture-megapolis-infrastructure-with-modern-skyscraper-buildings-purple-neon-background-cartoon-vector-illustration_22753125.htm)
 - 배경 bgm :[GAME OST](https://www.youtube.com/watch?v=hrgzWEgCCFg), [GAME OVER](https://www.youtube.com/watch?v=br3OzOrARh4), [GAME CLEAR](https://www.fesliyanstudios.com/royalty-free-music/download/8-bit-adventure/2282)
  
-  (* 사용한 이미지와 bgm은 저작권 무료 작품을 사용하였으나 재업로드는 하지않습니다.)
+  (* 사용한 이미지와 bgm은 저작권 무료 작품을 사용하였으나 재업로드는 하지않았습니다.)
 
 
